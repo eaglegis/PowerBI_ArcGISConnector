@@ -87,10 +87,28 @@ Refresh = () =>
 
 ArcGIS_FeatureLayer.Data = (url as text) =>
     let
-        url =  if Text.Contains(url, "?") then url & "&token="& Extension.CurrentCredential()[access_token] else url & "?token="& Extension.CurrentCredential()[access_token],
-        content = Web.Contents(url),
-        json = Json.Document(content),
-        table = Table.FromList(json[features], Splitter.SplitByNothing()),
+
+        // First, get the count of all features matching the query
+        c_url =  url & "&returnCountOnly=true&token=" & Extension.CurrentCredential()[access_token],
+        c_content = Web.Contents(c_url),
+        c_json = Json.Document(c_content),
+        count = c_json[count],
+
+        // Get data within each of the pages https://stackoverflow.com/questions/69116913/rest-api-pagination-loop-power-query-m-language
+        startAtList = List.Generate(()=>0, each _ < count, each _ +1000),
+        url =  if Text.Contains(url, "?") 
+            then url & "&resultRecordCount=1000&token="& Extension.CurrentCredential()[access_token] 
+            else url & "?f=json&outFields=""*""&where=1=1&returnGeometry=false&resultRecordCount=1000&token="& Extension.CurrentCredential()[access_token],
+        
+        pages = List.Transform(startAtList, each Json.Document(Web.Contents(url & "&resultOffset=" & Text.From(_)))[features]),
+        //lastPage = List.Last(pages),
+
+        
+        // Explode the list of lists into a single list
+
+        mainList = List.Combine(pages),
+
+        table = Table.FromList(mainList, Splitter.SplitByNothing()),
 
         MyTable = Table.ExpandRecordColumn(table, "Column1", {"attributes"}, {"attributes"}),
 
@@ -115,3 +133,4 @@ ArcGIS_FeatureLayer.Data = (url as text) =>
 
     in
         table2;
+        //lastPage;
