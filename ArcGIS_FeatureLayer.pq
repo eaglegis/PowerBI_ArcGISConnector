@@ -9,10 +9,13 @@ windowWidth = 800;
 windowHeight = 800;
 
 [DataSource.Kind="ArcGIS_FeatureLayer", Publish="ArcGIS_FeatureLayer.Publish"]
-shared ArcGIS_FeatureLayer.Query = Value.ReplaceType(ArcGIS_FeatureLayer.Data, type function (url as Uri.Type) as any);
+shared ArcGIS_FeatureLayer.Query = Value.ReplaceType(ArcGIS_FeatureLayer.Data, type function (url as Uri.Type) as any meta [
+    Documentation.Name = "ArcGIS Feature Layer Query"
+]);
 
 // Data Source Kind description
 ArcGIS_FeatureLayer = [
+    TestConnection = (dataSourcePath) => {"ArcGIS_FeatureLayer.Query", dataSourcePath},
     Authentication = [
         OAuth = [
             StartLogin = StartLogin,
@@ -20,7 +23,7 @@ ArcGIS_FeatureLayer = [
             Refresh = Refresh
         ]
     ],
-    Label = Extension.LoadString("DataSourceLabel")
+    Label = "ArcGIS Feature Layer Query"
 ];
 
 // Data Source UI publishing description
@@ -28,7 +31,7 @@ ArcGIS_FeatureLayer.Publish = [
     Beta = true,
     Category = "Other",
     ButtonText = { "ArcGIS Feature Services", "Connect to ArcGIS Feature Services" },
-    LearnMoreUrl = "https://arcgis.com",
+    LearnMoreUrl = "https://github.com/jake-eagle/PowerBI_ArcGISConnector",
     SourceImage = ArcGIS_FeatureLayer.Icons,
     SourceTypeImage = ArcGIS_FeatureLayer.Icons
 ];
@@ -73,12 +76,12 @@ TokenMethod = (code) =>
     in
         Parts;
 
-Refresh = () =>
+Refresh = (redirectUri, refresh_token) =>
     let
         Response = Web.Contents(portal & "/sharing/rest/oauth2/token/?", [
             Content = Text.ToBinary(Uri.BuildQueryString([
                 client_id = client_id,
-                refresh_token = Extension.CurrentCredential()[Properties][refresh_token],
+                refresh_token = refresh_token,
                 grant_type = "refresh_token"])),
             Headers=[#"Content-type" = "application/x-www-form-urlencoded",#"Accept" = "application/json"]]),
         Refreshed = Json.Document(Response)
@@ -88,31 +91,41 @@ Refresh = () =>
 ArcGIS_FeatureLayer.Data = (url as text) =>
     let
 
+        // Make sure url is requesting json
+        url =  if Text.Contains(url, "?") 
+               then 
+                   if Text.Contains(url, "f=html") 
+                   then Text.Replace(url, "f=html", "f=json") 
+                   else 
+                       if Text.Contains(url, "f=json") 
+                       then url 
+                       else url & "&f=json"
+               else url & "?f=json&outFields=""*""&where=1=1&returnGeometry=false",
+
         // First, get the count of all features matching the query
         c_url =  url & "&returnCountOnly=true&token=" & Extension.CurrentCredential()[access_token],
         c_content = Web.Contents(c_url),
         c_json = Json.Document(c_content),
         count = c_json[count],
 
-        // Get data within each of the pages https://stackoverflow.com/questions/69116913/rest-api-pagination-loop-power-query-m-language
+        // Generate the offset numbers for paginating the query
         startAtList = List.Generate(()=>0, each _ < count, each _ +1000),
-        url =  if Text.Contains(url, "?") 
-            then url & "&resultRecordCount=1000&token="& Extension.CurrentCredential()[access_token] 
-            else url & "?f=json&outFields=""*""&where=1=1&returnGeometry=false&resultRecordCount=1000&token="& Extension.CurrentCredential()[access_token],
+
+        requrl =  url & "&resultRecordCount=1000&token=" & Extension.CurrentCredential()[access_token],
         
-        pages = List.Transform(startAtList, each Json.Document(Web.Contents(url & "&resultOffset=" & Text.From(_)))[features]),
-        //lastPage = List.Last(pages),
+        // Get data within each of the pages https://stackoverflow.com/questions/69116913/rest-api-pagination-loop-power-query-m-language
+        pages = List.Transform(startAtList, each Json.Document(Web.Contents(requrl & "&resultOffset=" & Text.From(_)))[features]),
 
         
         // Explode the list of lists into a single list
-
         mainList = List.Combine(pages),
 
         table = Table.FromList(mainList, Splitter.SplitByNothing()),
 
+        // Explode out all the attributes in the query into separate columns
         MyTable = Table.ExpandRecordColumn(table, "Column1", {"attributes"}, {"attributes"}),
 
-        table2 = Table.ExpandRecordColumn(
+        output = Table.ExpandRecordColumn(
             MyTable, "attributes", Table.ColumnNames(
               Table.FromRecords(
                  List.Select(
@@ -132,5 +145,4 @@ ArcGIS_FeatureLayer.Data = (url as text) =>
       
 
     in
-        table2;
-        //lastPage;
+        output;
