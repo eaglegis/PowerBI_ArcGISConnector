@@ -20,9 +20,13 @@ This connector allows Power BI users to use secured ArcGIS Feature Layers as dat
 ## Usage
 1. Click `Get data` and Search for `ArcGIS`
 2. Enter the Query URL for the Feature Layer you want to add to to your Power BI model
+
 > **Note** The Query URL should look like `https://services.arcgis.com/hMYNkrKaydBeWRXE/ArcGIS/rest/services/Addresses_geocoded/FeatureServer/0/query`
+
 > **Note** The URL can include parameters to filter the query, as described in the [Query documentation](https://developers.arcgis.com/rest/services-reference/enterprise/query-feature-service-layer-.htm). 
+
 > **Note** If you don't provide any query parameters, the default query `?f=json&outFields=""*""&where=1=1&returnGeometry=false` will be returned. Power BI will try to load all of the results matching the query. Take care if there are many features in your Feature Layer.
+
 > **Note**  The geometry is not returned by the query. 
 
 > **IMPORTANT** Remove resultRecordCount and resultOffset from your query string to allow the application to handle pagination. Also, the output format in your query string should be set to `f=json`.
