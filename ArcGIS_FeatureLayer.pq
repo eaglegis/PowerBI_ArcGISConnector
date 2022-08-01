@@ -132,17 +132,7 @@ ArcGIS_FeatureLayer.Data = (url as text) =>
                     Table.Column(MyTable, "attributes"), each _ <> "" and _ <> null
                  )
               )
-           ),
-
-           Table.ColumnNames(
-              Table.FromRecords(
-                  List.Select(
-                      Table.Column(MyTable, "attributes"), each _ <> "" and _ <> null
-                  )
-              )
-            )
-        )
-      
+           )      
 
     in
         output;
