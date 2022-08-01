@@ -133,6 +133,6 @@ ArcGIS_FeatureLayer.Data = (url as text) =>
                  )
               )
            )      
-
+        )
     in
         output;
