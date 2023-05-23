@@ -1,0 +1,5 @@
+{
+    "powerquery.general.mode": "SDK",
+    "powerquery.sdk.defaultQueryFile": "${workspaceFolder}\\ArcGIS_FeatureLayer.query.pq",
+    "powerquery.sdk.defaultExtension": "${workspaceFolder}\\bin\\Debug\\ArcGIS_FeatureLayer.mez"
+}
