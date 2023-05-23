@@ -9,12 +9,12 @@ https://powerbi.microsoft.com/en-us/blog/refresh-your-power-bi-dataset-using-mic
 ## Compiling the connector
 1. Install Visual Studio Code
 2. Install the [Power Query SDK](https://marketplace.visualstudio.com/items?itemName=PowerQuery.vscode-powerquery-sdk)
-3. Clone `this` repository and open the folder in VS Code
+3. Clone this repository and open the folder in VS Code
 4. In ArcGIS Online or Enterprise, [register your App](https://doc.arcgis.com/en/arcgis-online/manage-data/add-items.htm#REG_APP). Name it `Power BI Desktop`.
 > **Note** If you want users to access items in both of your ArcGIS sites, you will need to compile separate connectors, repeating these steps for each site.
 5. In the App Settings, click **Update** and add `https://oauth.powerbi.com/views/oauthredirect.html` to the Redirect URI box. Click **Add**, then **Update**.
 6. In the App Settings, click **Registered info* and copy the App ID and App Secret. Use these to populate the files client_id and client_secret in the cloned repository.
-7. Rename `Button Text` within the `ArcGIS_FeatureLayer.Publish` object (ArcGIS_FeatureLayer.pq, line 33) to reflect the name of the environment (ArcGIS Online or the name of your Portal) this will be used to connect to.
+7. Change the `Button Text` within the `ArcGIS_FeatureLayer.Publish` object (ArcGIS_FeatureLayer.pq, line 33) to reflect the name of the environment (ArcGIS Online or the name of your Portal) this will be used to connect to.
 8. Press F1 and type "Build Task". Select the `Tasks: Run Build Task` option.
 9. Select "Build project using MakePQX"
 10. The Connector will build and get stored in the `[project]/bin/AnyCPU/Debug` folder
