@@ -32,7 +32,7 @@ shared ArcGIS_FeatureLayer.Content = Value.ReplaceType(ArcGIS_FeatureLayer.Data,
 ArcGIS_FeatureLayer.Publish = [
     Beta = true,
     Category = "Other",
-    ButtonText = { Text.FromBinary(Extension.Contents("connector_name")), "Connect to ArcGIS Feature Layers" },
+    ButtonText = { Text.FromBinary(Extension.Contents("connector_name.config")), "Connect to ArcGIS Feature Layers" },
     LearnMoreUrl = "https://github.com/eaglegis/PowerBI_ArcGISConnector",
     SourceImage = ArcGIS_FeatureLayer.Icons,
     SourceTypeImage = ArcGIS_FeatureLayer.Icons
@@ -44,9 +44,9 @@ ArcGIS_FeatureLayer.Icons = [
 ];
 
 // Define the oauth parameters for the connection
-portal = Text.FromBinary(Extension.Contents("client_portal"));
-client_id = Text.FromBinary(Extension.Contents("client_id"));
-client_secret = Text.FromBinary(Extension.Contents("client_secret"));
+portal = Text.FromBinary(Extension.Contents("client_portal.config"));
+client_id = Text.FromBinary(Extension.Contents("client_id.config"));
+client_secret = Text.FromBinary(Extension.Contents("client_secret.config"));
 redirect_uri = "https://oauth.powerbi.com/views/oauthredirect.html";
 windowWidth = 800;
 windowHeight = 800;
