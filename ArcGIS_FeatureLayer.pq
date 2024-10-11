@@ -1,6 +1,10 @@
 ﻿section ArcGIS_FeatureLayer;
 
-// Set out the framework for the connector
+// First, we define the framework for the connector, 
+//telling Power BI to Test the connection to the feature layer. 
+// Should the connection fail due to the layer requiring authentication, 
+//we tell it to use the methods StartLogin, FinishLogin and Refresh to 
+//handle the different components of the authentication process, which will be defined later.
 ArcGIS_FeatureLayer = [
     TestConnection = (dataSourcePath) => {"ArcGIS_FeatureLayer.Content", dataSourcePath},
     Authentication = [
@@ -12,9 +16,11 @@ ArcGIS_FeatureLayer = [
     ],
     Label = "ArcGIS Feature Layer Query"
 ];
-
-// Define the user parameters 
 [DataSource.Kind="ArcGIS_FeatureLayer", Publish="ArcGIS_FeatureLayer.Publish"]
+
+// Next, we define the parameter name and help documentation 
+// for the input that the user will see in Power BI when prompted to 
+// enter the Feature Layer URL.
 shared ArcGIS_FeatureLayer.Content = Value.ReplaceType(ArcGIS_FeatureLayer.Data, type function (
     url as (Uri.Type meta [
         Documentation.FieldCaption = "ArcGIS Feature Layer URL",
@@ -28,7 +34,10 @@ shared ArcGIS_FeatureLayer.Content = Value.ReplaceType(ArcGIS_FeatureLayer.Data,
     Documentation.Name = "ArcGIS Feature Layer Query"
 ]);
 
-// Connection publishing description
+// Then we provide the metadata for the custom connector, 
+// including the text that will be displayed in the 
+// Get Data pane within Power BI, and the connector’s 
+// icon (provided in different sizes to support different screen sizes).
 ArcGIS_FeatureLayer.Publish = [
     Beta = true,
     Category = "Other",
@@ -43,7 +52,9 @@ ArcGIS_FeatureLayer.Icons = [
     Icon32 = { Extension.Contents("ArcGIS_FeatureLayer32.png"), Extension.Contents("ArcGIS_FeatureLayer40.png"), Extension.Contents("ArcGIS_FeatureLayer48.png"), Extension.Contents("ArcGIS_FeatureLayer64.png") }
 ];
 
-// Define the oauth parameters for the connection
+// We then define the parameters for the OAuth2 connection which is used for authentication. 
+//The actual values are pulled from the configuration files which are 
+// modified when you compile the connector.
 portal = Text.FromBinary(Extension.Contents("client_portal.config"));
 client_id = Text.FromBinary(Extension.Contents("client_id.config"));
 client_secret = Text.FromBinary(Extension.Contents("client_secret.config"));
@@ -51,7 +62,9 @@ redirect_uri = "https://oauth.powerbi.com/views/oauthredirect.html";
 windowWidth = 800;
 windowHeight = 800;
 
-// Authentication - bring up oauth popup to user
+// The StartLogin step defines the first step of the login process. 
+// This is the step that presents the login window to the user and 
+// asks them to provide their credentials.
 StartLogin = (resourceUrl, state, display) =>
         let
             AuthorizeUrl = portal & "/sharing/rest/oauth2/authorize/?" & Uri.BuildQueryString([
@@ -67,6 +80,12 @@ StartLogin = (resourceUrl, state, display) =>
                 Context = null
             ];
 
+
+// If the StartLogin step completes successfully and the user is authenticated, 
+// the FinishLogin method gets the authorisation code returned in the response 
+// and uses TokenMethod to convert the authentication code into an Access Token 
+// (which is used to query a secure layer) and a Refresh Token 
+// (which is used to keep the access token up-to-date).
 FinishLogin = (context, callbackUri, state) =>
     let
         Parts = Uri.Parts(callbackUri)[Query]
@@ -88,7 +107,9 @@ TokenMethod = (code) =>
     in
         Parts;
 
-// Refresh the token as required
+// The RefreshToken method will keep the Access Token up-to-date, 
+// meaning that the user will only have to sign in again once the 
+// maxTokenExpirationMinutes of the Portal is reached. 
 Refresh = (redirectUri, refresh_token) =>
     let
         Response = Web.Contents(portal & "/sharing/rest/oauth2/token/?", [
@@ -101,8 +122,11 @@ Refresh = (redirectUri, refresh_token) =>
     in
         Refreshed;
 
+//Finally, the ArcGIS_FeatureLayer.Data method is used to get and 
+// parse the data from the feature layer.
 // Main function for getting data from the feature layer and displaying it in Power BI.
 ArcGIS_FeatureLayer.Data = (_url_ as text) =>
+    // Clean up the input URL
     let
         // Function to remove resultRecordCount and resultOffset from the query
         removeQueryParams = (query as text) as text =>
@@ -200,4 +224,5 @@ ArcGIS_FeatureLayer.Data = (_url_ as text) =>
             )      
         )
     in
+        // Return the output to the user
         output;
