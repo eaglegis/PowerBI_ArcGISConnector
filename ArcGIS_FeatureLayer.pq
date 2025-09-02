@@ -26,7 +26,7 @@ shared ArcGIS_FeatureLayer.Content = Value.ReplaceType(ArcGIS_FeatureLayer.Data,
         Documentation.FieldCaption = "ArcGIS Feature Layer URL",
         Documentation.FieldDescription = "Provide an ArcGIS Feature Layer URL (including Layer ID e.g. /0). 
         Optionally, also include a query to filter the records using the spec defined at https://developers.arcgis.com/rest/services-reference/enterprise/query-feature-service-layer/. 
-        If a query is not provided, the default query /query?f=json&outFields=""*""&where=1=1&returnGeometry=false will be used.
+        If a query is not provided, the default query /query?f=json&outFields=*&where=1=1&returnGeometry=false will be used.
         If there is an error in your query, you will see a message saying that the field 'count' cannot be found. The query is case sensitive.
         If you don't provide a where clause or objectids in your query, the query will default to where=1=1.
         The connector is configured to never request the geometry, and will request records in batches of 1000."
@@ -175,7 +175,7 @@ ArcGIS_FeatureLayer.Data = (_url_ as text) =>
                         if Text.Contains(Text.Lower(urlWithoutGeometry), "outfields=") then 
                             urlWithoutGeometry
                         else
-                            urlWithoutGeometry & "&outFields=""*""",
+                            urlWithoutGeometry & "&outFields=*",
 
                     // Make sure url provides a where clause or objectid
                     urlWithWhere = 
@@ -186,7 +186,7 @@ ArcGIS_FeatureLayer.Data = (_url_ as text) =>
                 in
                     urlWithWhere
             else 
-                _url & "?f=json&outFields=""*""&where=1=1&returnGeometry=false",
+                _url & "?f=json&outFields=*&where=1=1&returnGeometry=false",
 
 
         // First, get the count of all features matching the query
